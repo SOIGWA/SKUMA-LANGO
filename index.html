@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#07101f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Sukuma Lango — Guard Station</title>
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       SUKUMA LANGO — GUARD STATION
+       IDENTICAL design system to Admin Dashboard:
+       IBM Plex Mono · DM Sans · Bebas Neue
+       Same CSS variables · Same components · Mobile layout
+    ═══════════════════════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');
+
+    /* ── CSS variables — pixel-identical to admin dashboard ── */
+    :root {
+      --bg:          #07101f;
+      --bg-panel:    #0c1a30;
+      --bg-card:     #101f38;
+      --bg-input:    #0a1525;
+      --border:      #1a3356;
+      --accent:      #f5a623;
+      --accent-dim:  #c27f12;
+      --blue:        #3d9be9;
+      --blue-dim:    #2271b8;
+      --success:     #30d158;
+      --danger:      #ff453a;
+      --warning:     #ffd60a;
+      --purple:      #bf5af2;
+      --text:        #d8e8f8;
+      --text-muted:  #5a7a9e;
+      --text-dim:    #2d4a66;
+      --mono:        'IBM Plex Mono', monospace;
+      --sans:        'DM Sans', sans-serif;
+      --display:     'Bebas Neue', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%; font-family: var(--sans);
+      background: var(--bg); color: var(--text);
+      font-size: 14px; -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .screen { display: none; flex-direction: column; min-height: 100vh; padding-bottom: 64px; animation: pageIn .2s ease; }
+    .screen.active { display: flex; }
+    @keyframes pageIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+    /* ══ TOPBAR — same as admin ══ */
+    .topbar {
+      height: 56px; background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 18px; gap: 10px;
+      flex-shrink: 0; position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-title  { font-family: var(--display); font-size: 20px; letter-spacing: .06em; color: var(--text); }
+    .topbar-badge  {
+      font-family: var(--mono); font-size: 10px;
+      background: rgba(245,166,35,.15); color: var(--accent);
+      border: 1px solid rgba(245,166,35,.3);
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .topbar-right  { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .topbar-clock  { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+    .btn-back {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); font-family: var(--sans); font-size: 12px;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all .15s;
+    }
+    .btn-back:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ══ LOGIN ══ */
+    #screen-login {
+      justify-content: center; align-items: center;
+      padding: 32px 20px;
+    }
+    .login-box {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 36px 28px;
+      width: 100%; max-width: 400px;
+    }
+    .login-title { font-family: var(--display); font-size: 36px; letter-spacing: .08em; color: var(--accent); margin-bottom: 2px; }
+    .login-sub   { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5; }
+    .login-error {
+      background: rgba(255,69,58,.1); border: 1px solid rgba(255,69,58,.25);
+      color: var(--danger); border-radius: 8px; padding: 11px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+
+    /* ══ FORM FIELDS — same as admin .login-input + .ctrl ══ */
+    .field        { margin-bottom: 16px; }
+    .field-label  {
+      display: block; font-family: var(--mono); font-size: 10px;
+      font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 7px;
+    }
+    .field-input  {
+      display: block; width: 100%; padding: 12px 14px;
+      background: var(--bg-input); border: 1.5px solid var(--border);
+      border-radius: 7px; color: var(--text);
+      font-family: var(--sans); font-size: 15px;
+      outline: none; transition: border-color .2s; appearance: none; -webkit-appearance: none;
+    }
+    .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245,166,35,.08); }
+    .field-input::placeholder { color: var(--text-dim); }
+    select.field-input { cursor: pointer; }
+
+    /* ══ BUTTONS ══ */
+    .btn-primary {
+      display: block; width: 100%; padding: 14px; border-radius: 7px;
+      background: var(--accent); color: #000; border: none;
+      font-family: var(--display); font-size: 20px; letter-spacing: .06em;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-primary:hover { background: var(--accent-dim); }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+
+    .btn-accent-wide {
+      display: block; width: 100%; padding: 14px; border-radius: 7px;
+      background: var(--accent); color: #000; border: none;
+      font-family: var(--display); font-size: 20px; letter-spacing: .06em;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-accent-wide:hover { background: var(--accent-dim); }
+    .btn-accent-wide:disabled { opacity: .45; cursor: not-allowed; }
+
+    .btn-danger-wide {
+      display: block; width: 100%; padding: 14px; border-radius: 7px;
+      background: var(--danger); color: #fff; border: none;
+      font-family: var(--display); font-size: 20px; letter-spacing: .06em;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-danger-wide:hover { opacity: .85; }
+    .btn-danger-wide:disabled { opacity: .45; cursor: not-allowed; }
+
+    .btn-sm-outline {
+      padding: 7px 12px; border-radius: 6px; background: transparent;
+      border: 1px solid var(--border); color: var(--text-muted);
+      font-size: 12px; cursor: pointer; font-family: var(--sans); transition: all .15s;
+    }
+    .btn-sm-outline:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ══ KPI CARDS — identical to admin ══ */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 16px; }
+    .kpi-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 16px;
+      position: relative; overflow: hidden;
+    }
+    .kpi-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    }
+    .kpi-card.blue::after   { background: var(--blue); }
+    .kpi-card.amber::after  { background: var(--accent); }
+    .kpi-card.green::after  { background: var(--success); }
+    .kpi-card.purple::after { background: var(--purple); }
+    .kpi-icon  { font-size: 22px; margin-bottom: 10px; display: block; }
+    .kpi-value { font-family: var(--mono); font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+    .kpi-card.blue   .kpi-value { color: var(--blue); }
+    .kpi-card.amber  .kpi-value { color: var(--accent); }
+    .kpi-card.green  .kpi-value { color: var(--success); }
+    .kpi-card.purple .kpi-value { color: var(--purple); }
+    .kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
+
+    /* ══ ACTION CARDS ══ */
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 12px; }
+    .action-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 14px; text-align: center;
+      cursor: pointer; transition: border-color .15s, background .15s;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .action-card:hover { background: rgba(255,255,255,.02); }
+    .action-card.primary { border-color: rgba(245,166,35,.3); }
+    .action-card.primary:hover { border-color: var(--accent); }
+    .action-card.danger  { border-color: rgba(255,69,58,.25); }
+    .action-card.danger:hover  { border-color: var(--danger); }
+    .action-card-icon  { font-size: 26px; }
+    .action-card-label {
+      font-family: var(--display); font-size: 16px;
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    .action-card.primary .action-card-label { color: var(--accent); }
+    .action-card.danger  .action-card-label { color: var(--danger); }
+    .action-card-sub { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+
+    /* ══ TABLE WRAP — identical to admin ══ */
+    .table-wrap {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin: 0 16px 16px;
+    }
+    .table-toolbar {
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toolbar-label {
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg-panel); }
+    th {
+      padding: 10px 12px; text-align: left;
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-muted); border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 11px 12px; font-size: 13px;
+      border-bottom: 1px solid rgba(26,51,86,.5);
+      color: var(--text); vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.015); }
+    .mono-cell { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+
+    /* ══ PILLS — identical to admin ══ */
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 20px;
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+    }
+    .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .pill.inside  { background: rgba(48,209,88,.12);  color: var(--success); border: 1px solid rgba(48,209,88,.25); }
+    .pill.exited  { background: rgba(90,122,158,.1);  color: var(--text-muted); border: 1px solid var(--border); }
+    .pill.blocked { background: rgba(255,69,58,.12);  color: var(--danger);  border: 1px solid rgba(255,69,58,.25); }
+
+    /* ══ SECTION HEADER — same as admin ══ */
+    .section-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px;
+    }
+    .section-hdr h2 { font-family: var(--display); font-size: 18px; letter-spacing: .06em; color: var(--text); }
+
+    /* ══ ALERTS ══ */
+    .alert {
+      border-radius: 8px; padding: 12px 14px; font-size: 13px;
+      line-height: 1.5; display: none; margin: 0 16px 12px;
+    }
+    .alert.show { display: block; }
+    .alert-danger  { background: rgba(255,69,58,.1);   border: 1px solid rgba(255,69,58,.25);  color: var(--danger); }
+    .alert-success { background: rgba(48,209,88,.1);   border: 1px solid rgba(48,209,88,.25);  color: var(--success); }
+    .alert-warning { background: rgba(255,214,10,.08); border: 1px solid rgba(255,214,10,.25); color: var(--warning); }
+
+    /* ══ USER CHIP — same style as admin sidebar footer ══ */
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; margin: 12px 16px 4px;
+    }
+    .user-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--accent); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .user-name  { font-size: 13px; font-weight: 600; }
+    .user-role  { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+    .chip-right { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--text-muted); text-align: right; }
+
+    /* ══ QR OVERLAY ══ */
+    .overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(7,16,31,.96);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; animation: pageIn .2s ease;
+    }
+    .overlay.show { display: flex; }
+    .overlay-card {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px 22px;
+      width: 100%; max-width: 380px;
+    }
+    .overlay-title { font-family: var(--display); font-size: 26px; letter-spacing: .06em; color: var(--success); margin-bottom: 2px; }
+    .overlay-sub   { font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: .08em; margin-bottom: 18px; }
+    .qr-frame {
+      width: 190px; height: 190px; background: #fff;
+      border-radius: 10px; margin: 0 auto 18px;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .qr-frame img { width: 100%; height: 100%; }
+    .detail-block {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 6px 0; border-bottom: 1px solid rgba(26,51,86,.5); font-size: 13px;
+    }
+    .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .detail-key { font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: .06em; }
+    .detail-val { font-weight: 600; font-size: 13px; max-width: 58%; text-align: right; word-break: break-all; }
+    .log-id-line { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-align: center; margin-bottom: 16px; }
+
+    /* ══ FORM SECTION GROUPS ══ */
+    .screen-body { padding: 14px 16px; flex: 1; }
+    .form-section { margin-bottom: 14px; }
+
+    /* ══ BOTTOM NAV — styled like admin sidebar nav links ══ */
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: var(--bg-panel); border-top: 1px solid var(--border);
+      display: none;
+    }
+    .bottom-nav-inner { display: flex; }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 9px 4px 11px; gap: 3px; background: none; border: none;
+      cursor: pointer; color: var(--text-dim); font-family: var(--mono);
+      font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+      transition: color .15s; border-top: 2px solid transparent;
+    }
+    .nav-item.active { color: var(--accent); border-top-color: var(--accent); background: rgba(245,166,35,.05); }
+    .nav-icon { font-size: 18px; }
+
+    /* ══ SPINNER — same as admin ══ */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(245,166,35,.2); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .state-cell { text-align: center; padding: 24px !important; color: var(--text-dim); font-family: var(--mono); font-size: 11px; }
+    .divider    { height: 1px; background: var(--border); margin: 4px 16px 0; }
+
+    /* Exit quick-btn */
+    .exit-quick-btn {
+      padding: 5px 10px; border-radius: 5px;
+      background: rgba(255,69,58,.15); color: var(--danger);
+      border: 1px solid rgba(255,69,58,.3);
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      font-family: var(--sans); transition: background .15s;
+    }
+    .exit-quick-btn:hover { background: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════ LOGIN ══════════════════════════════ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-box">
+      <div class="login-title">🔐SUKUMA LANGO GUARD LOG IN</div>
+      <div class="login-sub">Guard Station · Access Control System<br/>&amp; Forensics</div>
+
+      <div class="login-error" id="login-error"></div>
+
+      <div class="field">
+        <label class="field-label">Guard Username</label>
+        <input type="text" id="login-username" class="field-input" placeholder="Enter username"
+               autocapitalize="none" autocorrect="off" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input type="password" id="login-password" class="field-input" placeholder="••••••••"
+               autocomplete="current-password" />
+      </div>
+
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">SIGN IN TO DUTY</button>
+
+      <p style="text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:10px;margin-top:20px;letter-spacing:.06em;">
+        CLOSED LAN SYSTEM · SUKUMA LANGO v1.0
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ DASHBOARD ══════════════════════════════ -->
+  <div id="screen-dashboard" class="screen">
+    <div class="topbar">
+      <div class="topbar-title">SUKUMA LANGO</div>
+      <div class="topbar-badge">GUARD STATION</div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="live-clock">00:00:00</div>
+      </div>
+    </div>
+
+    <!-- User chip -->
+    <div class="user-chip">
+      <div class="user-avatar" id="guard-avatar">G</div>
+      <div>
+        <div class="user-name" id="guard-name">Guard</div>
+        <div class="user-role" id="guard-role">GUARD</div>
+      </div>
+      <div class="chip-right" id="live-date">—</div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card blue">
+        <span class="kpi-icon">👥</span>
+        <div class="kpi-value" id="kpi-inside">—</div>
+        <div class="kpi-label">Inside Now</div>
+      </div>
+      <div class="kpi-card amber">
+        <span class="kpi-icon">🚗</span>
+        <div class="kpi-value" id="kpi-vehicles">—</div>
+        <div class="kpi-label">With Vehicles</div>
+      </div>
+    </div>
+
+    <!-- Action cards -->
+    <div class="action-grid">
+      <div class="action-card primary" onclick="showScreen('screen-register')">
+        <div class="action-card-icon">➕</div>
+        <div class="action-card-label">Register</div>
+        <div class="action-card-sub">Check-in visitor</div>
+      </div>
+      <div class="action-card danger" onclick="showScreen('screen-exit')">
+        <div class="action-card-icon">🚪</div>
+        <div class="action-card-label">Log Exit</div>
+        <div class="action-card-sub">Record departure</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Active visitors table -->
+    <div class="section-hdr">
+      <h2>ACTIVE VISITORS</h2>
+      <button class="btn-sm-outline" onclick="loadDashboard()">🔄 Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Visitor ID</th><th>Host</th><th>Gate</th><th>Time In</th><th>Status</th></tr>
+        </thead>
+        <tbody id="dash-tbody">
+          <tr><td colspan="5" class="state-cell"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ REGISTER VISITOR ══════════════════════════════ -->
+  <div id="screen-register" class="screen">
+    <div class="topbar">
+      <button class="btn-back" onclick="showScreen('screen-dashboard')">← Back</button>
+      <div class="topbar-title">REGISTER VISITOR</div>
+      <div class="topbar-badge">CHECK-IN</div>
+    </div>
+
+    <div class="screen-body">
+      <div class="alert alert-danger"  id="reg-error"></div>
+      <div class="alert alert-warning" id="reg-warning"></div>
+
+      <!-- Identity group -->
+      <div class="form-section">
+        <div class="table-wrap" style="margin:0">
+          <div class="table-toolbar"><span class="toolbar-label">Identity</span></div>
+          <div style="padding:14px 14px 6px">
+            <div class="field">
+              <label class="field-label">ID Type</label>
+              <select id="reg-id-type" class="field-input">
+                <option value="national_id">National ID</option>
+                <option value="passport">Passport</option>
+                <option value="alien_card">Alien Card</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">ID Number *</label>
+              <input type="text" id="reg-visitor-id" class="field-input" placeholder="e.g. 12345678" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <label class="field-label">Full Name (as on ID) *</label>
+              <input type="text" id="reg-name" class="field-input" placeholder="Full legal name" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact group -->
+      <div class="form-section">
+        <div class="table-wrap" style="margin:0">
+          <div class="table-toolbar"><span class="toolbar-label">Contact</span></div>
+          <div style="padding:14px 14px 6px">
+            <div class="field">
+              <label class="field-label">Phone Number *</label>
+              <input type="tel" id="reg-phone" class="field-input" placeholder="+254 7XX XXX XXX" inputmode="tel" />
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <label class="field-label">Email (Optional)</label>
+              <input type="email" id="reg-email" class="field-input" placeholder="visitor@example.com" inputmode="email" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visit details group -->
+      <div class="form-section">
+        <div class="table-wrap" style="margin:0">
+          <div class="table-toolbar"><span class="toolbar-label">Visit Details</span></div>
+          <div style="padding:14px 14px 6px">
+            <div class="field">
+              <label class="field-label">Host / Person Visiting *</label>
+              <input type="text" id="reg-host" class="field-input" placeholder="Name of host or resident" />
+            </div>
+            <div class="field">
+              <label class="field-label">Department / Location</label>
+              <input type="text" id="reg-dept" class="field-input" placeholder="e.g. Block A, Room 204" />
+            </div>
+            <div class="field">
+              <label class="field-label">Purpose of Visit</label>
+              <input type="text" id="reg-purpose" class="field-input" placeholder="e.g. Meeting, Delivery" />
+            </div>
+            <div class="field">
+              <label class="field-label">Vehicle Plate (if applicable)</label>
+              <input type="text" id="reg-vehicle" class="field-input" placeholder="e.g. KCA 001A" autocapitalize="characters" />
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <label class="field-label">Entry Gate</label>
+              <select id="reg-gate" class="field-input">
+                <option value="Main Gate">Main Gate</option>
+                <option value="Gate B">Gate B</option>
+                <option value="Gate C">Gate C</option>
+                <option value="Staff Entrance">Staff Entrance</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-accent-wide" id="btn-register" onclick="doRegister()">REGISTER &amp; ISSUE PASS</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ LOG EXIT ══════════════════════════════ -->
+  <div id="screen-exit" class="screen">
+    <div class="topbar">
+      <button class="btn-back" onclick="showScreen('screen-dashboard')">← Back</button>
+      <div class="topbar-title">LOG EXIT</div>
+      <div class="topbar-badge">DEPARTURE</div>
+    </div>
+
+    <div class="screen-body">
+      <div class="alert alert-danger"  id="exit-error"></div>
+      <div class="alert alert-success" id="exit-success"></div>
+
+      <div class="form-section">
+        <div class="table-wrap" style="margin:0">
+          <div class="table-toolbar"><span class="toolbar-label">Exit Details</span></div>
+          <div style="padding:14px 14px 6px">
+            <div class="field">
+              <label class="field-label">Log ID (from visitor pass)</label>
+              <input type="text" id="exit-log-id" class="field-input"
+                     placeholder="Scan QR or enter Log ID"
+                     style="font-family:var(--mono);font-size:12px;" autocomplete="off" />
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <label class="field-label">Exit Gate</label>
+              <select id="exit-gate" class="field-input">
+                <option value="Main Gate">Main Gate</option>
+                <option value="Gate B">Gate B</option>
+                <option value="Gate C">Gate C</option>
+                <option value="Staff Entrance">Staff Entrance</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-danger-wide" id="btn-exit" onclick="doExit()">CONFIRM EXIT</button>
+    </div>
+
+    <div class="divider" style="margin-top:8px"></div>
+
+    <div class="section-hdr">
+      <h2>CURRENTLY INSIDE</h2>
+      <button class="btn-sm-outline" onclick="loadExitList()">🔄 Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Visitor ID</th><th>Host</th><th>Time In</th><th>Action</th></tr>
+        </thead>
+        <tbody id="exit-tbody">
+          <tr><td colspan="4" class="state-cell"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ QR PASS OVERLAY ══════════════════════════════ -->
+  <div id="qr-overlay" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-title">ENTRY GRANTED</div>
+      <div class="overlay-sub">VISITOR LOCAL PASS · PRESENT AT CHECKPOINT</div>
+
+      <div class="qr-frame">
+        <img id="qr-img" src="" alt="QR Pass" />
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-row">
+          <span class="detail-key">NAME</span>
+          <span class="detail-val" id="pass-name">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">ID NO.</span>
+          <span class="detail-val" id="pass-id">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">HOST</span>
+          <span class="detail-val" id="pass-host">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">GATE</span>
+          <span class="detail-val" id="pass-gate">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">ENTRY TIME</span>
+          <span class="detail-val" id="pass-time">—</span>
+        </div>
+      </div>
+
+      <div class="log-id-line">LOG ID: <span id="pass-log-id" style="color:var(--text-muted)">—</span></div>
+
+      <button class="btn-accent-wide" onclick="closeQR()">DONE — NEXT VISITOR</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ BOTTOM NAV ══════════════════════════════ -->
+  <nav id="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="nav-item active" id="nav-dash" onclick="showScreen('screen-dashboard')">
+        <span class="nav-icon">📊</span>Dashboard
+      </button>
+      <button class="nav-item" id="nav-reg" onclick="showScreen('screen-register')">
+        <span class="nav-icon">➕</span>Register
+      </button>
+      <button class="nav-item" id="nav-exit" onclick="showScreen('screen-exit')">
+        <span class="nav-icon">🚪</span>Exit
+      </button>
+      <button class="nav-item" onclick="doLogout()">
+        <span class="nav-icon">⏏️</span>Logout
+      </button>
+    </div>
+  </nav>
+
+</div><!-- #app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   SUKUMA LANGO — GUARD STATION LOGIC
+═══════════════════════════════════════════════════════ */
+
+const API = '/api/v1';
+let token = null, currentUser = null, clockInt = null, refreshInt = null;
+
+// ── API ────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    ...opts,
+  });
+  const json = await res.json();
+  if (res.status === 401) doLogout();
+  return { ok: res.ok, status: res.status, data: json };
+}
+
+// ── Navigation ─────────────────────────────────────────
+const NAV_MAP = { 'screen-dashboard': 'nav-dash', 'screen-register': 'nav-reg', 'screen-exit': 'nav-exit' };
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (NAV_MAP[id]) document.getElementById(NAV_MAP[id])?.classList.add('active');
+  if (id === 'screen-dashboard') loadDashboard();
+  if (id === 'screen-exit')      loadExitList();
+}
+
+// ── Clock ──────────────────────────────────────────────
+function startClock() {
+  clearInterval(clockInt);
+  clockInt = setInterval(() => {
+    const now = new Date();
+    const cl  = document.getElementById('live-clock');
+    const dt  = document.getElementById('live-date');
+    if (cl) cl.textContent = now.toLocaleTimeString('en-KE', { hour12: false });
+    if (dt) dt.textContent = now.toLocaleDateString('en-KE', { weekday:'short', day:'numeric', month:'short' });
+  }, 1000);
+}
+
+// ── Alerts ─────────────────────────────────────────────
+function showAlert(id, msg, type = 'danger') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `alert alert-${type} show`;
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  if (el) el.className = 'alert';
+}
+
+// ── Button loading ─────────────────────────────────────
+function setLoading(id, loading, label) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled  = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span>${label}…` : label;
+}
+
+// ── LOGIN ──────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!username || !password) {
+    errEl.textContent = 'Please enter your username and password.';
+    errEl.style.display = 'block'; return;
+  }
+
+  setLoading('btn-login', true, 'SIGNING IN');
+  try {
+    const { ok, data } = await apiFetch('/auth/login', {
+      method: 'POST', body: JSON.stringify({ username, password }),
+    });
+    if (!ok) {
+      errEl.textContent = data.error?.message || 'Login failed.';
+      errEl.style.display = 'block'; return;
+    }
+    token       = data.data.accessToken;
+    currentUser = data.data.user;
+    sessionStorage.setItem('sl_g_token', token);
+    sessionStorage.setItem('sl_g_user',  JSON.stringify(currentUser));
+    document.getElementById('login-password').value = '';
+    bootDashboard();
+  } catch (_) {
+    errEl.textContent = 'Network error. Is the server running on this LAN?';
+    errEl.style.display = 'block';
+  } finally {
+    setLoading('btn-login', false, 'SIGN IN TO DUTY');
+  }
+}
+
+function bootDashboard() {
+  const u = currentUser;
+  document.getElementById('guard-name').textContent   = u.username;
+  document.getElementById('guard-role').textContent   = `${u.roleName} · ${u.shiftStatus === 'on_duty' ? 'On Duty' : u.shiftStatus}`;
+  document.getElementById('guard-avatar').textContent = u.username[0].toUpperCase();
+  document.getElementById('bottom-nav').style.display = 'block';
+  startClock();
+  showScreen('screen-dashboard');
+  clearInterval(refreshInt);
+  refreshInt = setInterval(() => {
+    if (document.getElementById('screen-dashboard').classList.contains('active')) loadDashboard();
+  }, 60000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-password')?.addEventListener('keyup', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('login-username')?.addEventListener('keyup', e => { if (e.key === 'Enter') document.getElementById('login-password').focus(); });
+  const t = sessionStorage.getItem('sl_g_token');
+  const u = sessionStorage.getItem('sl_g_user');
+  if (t && u) { token = t; currentUser = JSON.parse(u); bootDashboard(); }
+});
+
+// ── DASHBOARD DATA ─────────────────────────────────────
+async function loadDashboard() {
+  // Occupancy KPIs
+  try {
+    const { ok, data } = await apiFetch('/audit/occupancy');
+    if (ok) {
+      document.getElementById('kpi-inside').textContent   = data.data.totalInside;
+      document.getElementById('kpi-vehicles').textContent = data.data.withVehicles;
+    }
+  } catch (_) {}
+
+  // Active visitor table
+  const tbody = document.getElementById('dash-tbody');
+  try {
+    const { ok, data } = await apiFetch('/visitors/active');
+    if (!ok) { tbody.innerHTML = `<tr><td colspan="5" class="state-cell">Could not load visitors.</td></tr>`; return; }
+    const vs = data.data.visitors;
+    if (!vs.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="state-cell">No visitors currently inside.</td></tr>`; return;
+    }
+    tbody.innerHTML = vs.map(v => `
+      <tr>
+        <td class="mono-cell">${esc(v.visitorId)}</td>
+        <td>${esc(v.hostName || '—')}</td>
+        <td>${esc(v.gateEntry)}</td>
+        <td class="mono-cell">${fmtTime(v.entryTime)}</td>
+        <td><span class="pill inside"><span class="pill-dot"></span>Inside</span></td>
+      </tr>`).join('');
+  } catch (_) {
+    tbody.innerHTML = `<tr><td colspan="5" class="state-cell">Network error.</td></tr>`;
+  }
+}
+
+// ── REGISTER ───────────────────────────────────────────
+async function doRegister() {
+  hideAlert('reg-error'); hideAlert('reg-warning');
+  const payload = {
+    visitorId:    document.getElementById('reg-visitor-id').value.trim(),
+    idType:       document.getElementById('reg-id-type').value,
+    visitorName:  document.getElementById('reg-name').value.trim(),
+    phoneNum:     document.getElementById('reg-phone').value.trim(),
+    email:        document.getElementById('reg-email').value.trim() || null,
+    hostName:     document.getElementById('reg-host').value.trim(),
+    hostDept:     document.getElementById('reg-dept').value.trim() || null,
+    purpose:      document.getElementById('reg-purpose').value.trim() || null,
+    vehiclePlate: document.getElementById('reg-vehicle').value.trim() || null,
+    gateEntry:    document.getElementById('reg-gate').value,
+  };
+
+  if (!payload.visitorId || !payload.visitorName || !payload.phoneNum || !payload.hostName) {
+    showAlert('reg-error', 'Please fill in all required fields marked with *.'); return;
+  }
+
+  setLoading('btn-register', true, 'REGISTERING');
+  try {
+    const { ok, status, data } = await apiFetch('/visitors/register', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+    if (!ok) {
+      const msg = status === 403 && data.error?.code === 'VISITOR_BLACKLISTED'
+        ? '🚫 BLACKLISTED VISITOR — Entry denied. Detain and contact security management.'
+        : (data.error?.message || 'Registration failed.');
+      showAlert('reg-error', msg); return;
+    }
+    const d = data.data;
+    document.getElementById('qr-img').src            = d.qrCodeDataUrl || '';
+    document.getElementById('pass-name').textContent = payload.visitorName;
+    document.getElementById('pass-id').textContent   = payload.visitorId;
+    document.getElementById('pass-host').textContent = payload.hostName;
+    document.getElementById('pass-gate').textContent = payload.gateEntry;
+    document.getElementById('pass-time').textContent = fmtDateTime(d.entryTime);
+    document.getElementById('pass-log-id').textContent = d.logId;
+    document.getElementById('qr-overlay').classList.add('show');
+    ['reg-visitor-id','reg-name','reg-phone','reg-email','reg-host','reg-dept','reg-purpose','reg-vehicle']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  } catch (_) {
+    showAlert('reg-error', 'Network error. Check server connection.');
+  } finally {
+    setLoading('btn-register', false, 'REGISTER &amp; ISSUE PASS');
+  }
+}
+
+function closeQR() {
+  document.getElementById('qr-overlay').classList.remove('show');
+  loadDashboard();
+}
+
+// ── LOG EXIT ───────────────────────────────────────────
+async function doExit() {
+  hideAlert('exit-error'); hideAlert('exit-success');
+  const logId    = document.getElementById('exit-log-id').value.trim();
+  const gateExit = document.getElementById('exit-gate').value;
+  if (!logId) { showAlert('exit-error', 'Please enter or scan a visitor Log ID.'); return; }
+
+  setLoading('btn-exit', true, 'CONFIRMING');
+  try {
+    const { ok, data } = await apiFetch(`/visitors/${logId}/exit`, {
+      method: 'PATCH', body: JSON.stringify({ gateExit }),
+    });
+    if (!ok) { showAlert('exit-error', data.error?.message || 'Exit logging failed.'); return; }
+    showAlert('exit-success',
+      `Exit recorded at ${fmtDateTime(data.data.exitTime)} · Gate: ${data.data.gateExit}`, 'success');
+    document.getElementById('exit-log-id').value = '';
+    loadDashboard();
+    loadExitList();
+  } catch (_) {
+    showAlert('exit-error', 'Network error.');
+  } finally {
+    setLoading('btn-exit', false, 'CONFIRM EXIT');
+  }
+}
+
+async function loadExitList() {
+  const tbody = document.getElementById('exit-tbody');
+  tbody.innerHTML = `<tr><td colspan="4" class="state-cell"><span class="spinner"></span>Loading…</td></tr>`;
+  try {
+    const { ok, data } = await apiFetch('/visitors/active');
+    if (!ok || !data.data) { tbody.innerHTML = `<tr><td colspan="4" class="state-cell">Could not load.</td></tr>`; return; }
+    const vs = data.data.visitors;
+    if (!vs.length) { tbody.innerHTML = `<tr><td colspan="4" class="state-cell">No visitors currently inside.</td></tr>`; return; }
+    tbody.innerHTML = vs.map(v => `
+      <tr>
+        <td class="mono-cell">${esc(v.visitorId)}</td>
+        <td>${esc(v.hostName || '—')}</td>
+        <td class="mono-cell">${fmtTime(v.entryTime)}</td>
+        <td>
+          <button class="exit-quick-btn" onclick="prefillExit('${esc(v.logId)}')">Exit</button>
+        </td>
+      </tr>`).join('');
+  } catch (_) {
+    tbody.innerHTML = `<tr><td colspan="4" class="state-cell">Network error.</td></tr>`;
+  }
+}
+
+function prefillExit(logId) {
+  document.getElementById('exit-log-id').value = logId;
+  document.getElementById('exit-log-id').focus();
+}
+
+// ── LOGOUT ─────────────────────────────────────────────
+async function doLogout() {
+  try { await apiFetch('/auth/logout', { method: 'POST' }); } catch (_) {}
+  token = null; currentUser = null;
+  sessionStorage.removeItem('sl_g_token');
+  sessionStorage.removeItem('sl_g_user');
+  clearInterval(clockInt); clearInterval(refreshInt);
+  document.getElementById('bottom-nav').style.display = 'none';
+  showScreen('screen-login');
+}
+
+// ── Utilities ───────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtTime(dt) { return dt ? new Date(dt).toLocaleTimeString('en-KE', { hour:'2-digit', minute:'2-digit', hour12:false }) : '—'; }
+function fmtDateTime(dt) { return dt ? new Date(dt).toLocaleString('en-KE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false }) : '—'; }
+</script>
+</body>
+</html>
