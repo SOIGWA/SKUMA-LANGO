@@ -1,8 +1,5 @@
 # 🔐 SUKUMA LANGO
 ### Integrated Digital Access Control & Visitor Forensic Logging System
-**KCA University · Department of Information Security & Forensics**
-**Candidate: Andy Abuga Ombasa | Reg No: 24/06668**
-
 ---
 
 ## System Overview
