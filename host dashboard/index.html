@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sukuma Lango — Host Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');
+:root{
+  --bg:#0b1120;--bg2:#111b2e;--bg3:#162038;--bg4:#1c2a44;
+  --border:#1e3356;--accent:#f5a623;--accent2:#e8911a;
+  --blue:#3b8fd4;--teal:#0fa884;--teal2:#0c8268;
+  --success:#22c55e;--danger:#ef4444;--warning:#f59e0b;
+  --text:#e2eeff;--text2:#8ba4c4;--text3:#3d5878;
+  --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;--display:'Bebas Neue',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ── TOPBAR ── */
+#topbar{
+  height:56px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:14px;
+  position:sticky;top:0;z-index:100;
+}
+.tb-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),#076e56);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 16px rgba(15,168,132,.3)}
+.tb-brand{font-family:var(--display);font-size:20px;letter-spacing:.06em;color:var(--text)}
+.tb-badge{font-family:var(--mono);font-size:10px;background:rgba(15,168,132,.12);color:var(--teal);border:1px solid rgba(15,168,132,.25);padding:3px 10px;border-radius:20px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tb-user{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+.tb-avatar{width:26px;height:26px;border-radius:50%;background:var(--teal);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}
+.tb-uname{font-size:12px;font-weight:600}
+.tb-urole{font-family:var(--mono);font-size:10px;color:var(--teal)}
+.btn-sm-outline{padding:6px 14px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-sm-outline:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ── LAYOUT ── */
+#layout{display:flex;min-height:calc(100vh - 56px)}
+#sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column}
+.sb-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);padding:0 18px 6px}
+.sb-link{display:flex;align-items:center;gap:10px;padding:9px 18px;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all .15s;border-left:3px solid transparent}
+.sb-link:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.sb-link.active{color:var(--teal);border-left-color:var(--teal);background:rgba(15,168,132,.07)}
+.sb-icon{font-size:15px;width:18px;text-align:center}
+#main{flex:1;padding:24px;overflow-y:auto}
+
+/* ── PAGE ── */
+.page{display:none;animation:fadeUp .2s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-hdr h1{font-family:var(--display);font-size:26px;letter-spacing:.05em;color:var(--text)}
+.page-hdr p{font-size:12px;color:var(--text2);margin-top:3px}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-icon{font-size:22px;margin-bottom:10px;display:block}
+.kpi-val{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1;margin-bottom:4px}
+.kpi-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+
+/* ── CARD ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.card-toolbar{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg3)}
+.card-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)}
+
+/* ── FORM ── */
+.field{margin-bottom:16px}
+.field-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:7px}
+.field-input{display:block;width:100%;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s}
+.field-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,168,132,.1)}
+.field-input::placeholder{color:var(--text3)}
+select.field-input{cursor:pointer}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── CUSTOM DATE / TIME PICKER ── */
+.custom-picker-wrap{position:relative;user-select:none}
+.custom-picker-display{
+  display:flex;align-items:center;gap:10px;
+  width:100%;padding:11px 14px;
+  background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:14px;cursor:pointer;
+  transition:border-color .2s;
+}
+.custom-picker-display:hover{border-color:var(--teal)}
+.custom-picker-display.open{border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,168,132,.1)}
+.picker-icon{font-size:16px;flex-shrink:0}
+.picker-chevron{margin-left:auto;font-size:10px;color:var(--text3);transition:transform .2s}
+.custom-picker-display.open .picker-chevron{transform:rotate(180deg)}
+.custom-picker-dropdown{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:500;
+  background:var(--bg2);border:1.5px solid var(--teal);border-radius:12px;
+  box-shadow:0 16px 48px rgba(0,0,0,.7);
+  min-width:100%;overflow:hidden;
+  animation:fadeUp .15s ease;
+}
+
+/* Calendar */
+.cal-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);
+}
+.cal-nav button{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.cal-nav button:hover{border-color:var(--teal);color:var(--teal)}
+.cal-weekdays{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  padding:8px 10px 4px;gap:2px;
+}
+.cal-weekdays span{
+  text-align:center;font-family:var(--mono);font-size:10px;
+  color:var(--text3);font-weight:700;padding:2px 0;
+}
+.cal-days{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  padding:4px 10px 12px;gap:3px;
+}
+.cal-day{
+  text-align:center;padding:7px 2px;border-radius:7px;
+  font-size:13px;cursor:pointer;color:var(--text2);
+  transition:all .15s;border:1px solid transparent;
+}
+.cal-day:hover:not(.disabled):not(.empty){background:var(--bg3);color:var(--text);border-color:var(--border)}
+.cal-day.today{color:var(--teal);font-weight:700;border-color:rgba(15,168,132,.3)}
+.cal-day.selected{background:var(--teal);color:#fff;font-weight:700;border-color:var(--teal)}
+.cal-day.disabled{color:var(--text3);cursor:not-allowed;opacity:.35}
+.cal-day.empty{cursor:default}
+
+/* Time picker */
+.time-cols{display:flex;align-items:stretch;gap:0;min-width:220px;height:200px}
+.time-col{
+  flex:1;overflow-y:auto;padding:6px 4px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.time-col::-webkit-scrollbar{width:4px}
+.time-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.time-sep{
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:20px;font-weight:700;
+  color:var(--teal);padding:0 2px;flex-shrink:0;
+}
+.time-opt{
+  padding:8px 10px;border-radius:7px;font-family:var(--mono);
+  font-size:13px;text-align:center;cursor:pointer;color:var(--text2);
+  transition:all .12s;margin-bottom:2px;border:1px solid transparent;
+}
+.time-opt:hover{background:var(--bg3);color:var(--text)}
+.time-opt.selected{background:var(--teal);color:#fff;font-weight:700}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s;border:none;display:inline-flex;align-items:center;gap:6px}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-teal:hover{background:var(--teal2)}
+.btn-amber{background:var(--accent);color:#000}
+.btn-amber:hover{background:var(--accent2)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── PILLS ── */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-family:var(--mono);font-size:10px;font-weight:700}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill.pending{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.25)}
+.pill.accepted{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+.pill.expired{background:rgba(139,164,196,.1);color:var(--text2);border:1px solid var(--border)}
+.pill.inside{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse}
+thead{background:var(--bg3)}
+th{padding:10px 14px;text-align:left;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)}
+td{padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(30,51,86,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.mono{font-family:var(--mono);font-size:11px;color:var(--text2)}
+
+/* ── INVITE CARD ── */
+.invite-preview{
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:20px;margin-top:16px;display:none;
+}
+.invite-preview-title{font-family:var(--display);font-size:20px;letter-spacing:.05em;color:var(--teal);margin-bottom:4px}
+.invite-preview-sub{font-size:12px;color:var(--text2);margin-bottom:16px}
+.invite-detail{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,51,86,.5);font-size:13px}
+.invite-detail:last-child{border-bottom:none}
+.invite-key{color:var(--text2)}
+.invite-val{font-weight:600}
+
+/* ── ALERT ── */
+.alert{border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:14px;display:none}
+.alert.show{display:block}
+.alert-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--success)}
+.alert-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(15,168,132,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.state-cell{text-align:center;padding:24px;color:var(--text3);font-family:var(--mono);font-size:12px}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+#login-screen::before{
+  content:'';position:absolute;inset:-50%;
+  background-image:radial-gradient(rgba(15,168,132,.12) 1.5px,transparent 1.5px);
+  background-size:30px 30px;animation:dotDrift 25s linear infinite;
+}
+@keyframes dotDrift{from{transform:translate(0,0)}to{transform:translate(30px,30px)}}
+.lbox{position:relative;z-index:1;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:420px;max-width:96vw;box-shadow:0 32px 80px rgba(0,0,0,.6)}
+.lbox-icon{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,var(--teal),#076e56);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;box-shadow:0 0 28px rgba(15,168,132,.35)}
+.lbox-title{font-family:var(--display);font-size:32px;letter-spacing:.06em;color:var(--teal);margin-bottom:3px}
+.lbox-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.lbox-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--danger);border-radius:8px;padding:11px 14px;font-size:13px;margin-bottom:14px;display:none}
+.lbox-field{margin-bottom:16px}
+.lbox-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:7px}
+.lbox-wrap{position:relative}
+.lbox-icon-field{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text3);pointer-events:none}
+.lbox-input{width:100%;padding:12px 14px 12px 40px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;transition:all .2s}
+.lbox-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,168,132,.1)}
+.lbox-input::placeholder{color:var(--text3)}
+.lbox-btn{width:100%;padding:14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-family:var(--display);font-size:20px;letter-spacing:.08em;cursor:pointer;transition:all .2s;margin-top:4px}
+.lbox-btn:hover{background:var(--teal2);transform:translateY(-1px)}
+.lbox-status{display:flex;align-items:center;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.lbox-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:blink 2s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.lbox-status-txt{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em}
+
+@media(max-width:768px){
+  #sidebar{display:none}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="lbox">
+    <div class="lbox-icon">🏠</div>
+    <div class="lbox-title">HOST PORTAL</div>
+    <div class="lbox-sub">Sukuma Lango · Send visitor invitations and track your guests</div>
+    <div class="lbox-err" id="login-err"></div>
+    <div class="lbox-field">
+      <label class="lbox-label">Username</label>
+      <div class="lbox-wrap">
+        <span class="lbox-icon-field">👤</span>
+        <input type="text" id="h-username" class="lbox-input" placeholder="Enter username" autocapitalize="none"/>
+      </div>
+    </div>
+    <div class="lbox-field">
+      <label class="lbox-label">Password</label>
+      <div class="lbox-wrap">
+        <span class="lbox-icon-field">🔒</span>
+        <input type="password" id="h-password" class="lbox-input" placeholder="••••••••"/>
+      </div>
+    </div>
+    <button class="lbox-btn" onclick="doLogin()">ACCESS HOST PORTAL</button>
+    <div class="lbox-status">
+      <div class="lbox-dot"></div>
+      <span class="lbox-status-txt">SUKUMA LANGO · CLOSED LAN · HOST PORTAL</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div id="topbar" style="display:none">
+  <div class="tb-icon">🏠</div>
+  <div class="tb-brand">SUKUMA LANGO</div>
+  <div class="tb-badge">HOST PORTAL</div>
+  <div class="tb-right">
+    <div class="tb-user">
+      <div class="tb-avatar" id="tb-avatar">H</div>
+      <div>
+        <div class="tb-uname" id="tb-uname">Host</div>
+        <div class="tb-urole">HOST</div>
+      </div>
+    </div>
+    <button class="btn-sm-outline" onclick="doLogout()">⏏ Logout</button>
+  </div>
+</div>
+
+<!-- ══ LAYOUT ══ -->
+<div id="layout" style="display:none">
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div style="padding:16px 0">
+      <div class="sb-label" style="margin-bottom:8px">Host Menu</div>
+      <button class="sb-link active" id="nav-dashboard" onclick="showPage('page-dashboard')"><span class="sb-icon">📊</span> Dashboard</button>
+      <button class="sb-link" id="nav-invite"    onclick="showPage('page-invite')">   <span class="sb-icon">✉️</span> Send Invite</button>
+      <button class="sb-link" id="nav-myvisits"  onclick="showPage('page-myvisits')"> <span class="sb-icon">👥</span> My Visitors</button>
+      <button class="sb-link" id="nav-scheduled" onclick="showPage('page-scheduled')"><span class="sb-icon">📅</span> Scheduled Visits</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-hdr">
+        <div>
+          <h1># Host Dashboard</h1>
+          <p>Welcome back — manage your visitor invitations and track arrivals</p>
+        </div>
+        <button class="btn btn-outline" onclick="loadDashboard()">🔄 Refresh</button>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-accent" style="background:var(--teal)"></div>
+          <span class="kpi-icon">📬</span>
+          <div class="kpi-val" id="kpi-sent" style="color:var(--teal)">0</div>
+          <div class="kpi-lbl">Invites Sent</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-accent" style="background:var(--success)"></div>
+          <span class="kpi-icon">✅</span>
+          <div class="kpi-val" id="kpi-arrived" style="color:var(--success)">0</div>
+          <div class="kpi-lbl">Arrived Today</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-accent" style="background:var(--warning)"></div>
+          <span class="kpi-icon">⏳</span>
+          <div class="kpi-val" id="kpi-pending" style="color:var(--warning)">0</div>
+          <div class="kpi-lbl">Pending Arrival</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-toolbar">
+          <span class="card-title">Recent Invitations</span>
+          <button class="btn btn-teal" style="margin-left:auto" onclick="showPage('page-invite')">✉️ Send New Invite</button>
+        </div>
+        <table>
+          <thead><tr><th>Guest Name</th><th>Email</th><th>Purpose</th><th>Scheduled</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="recent-invites-body">
+            <tr><td colspan="6" class="state-cell">No invitations sent yet. Click "Send New Invite" to get started.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SEND INVITE -->
+    <div class="page" id="page-invite">
+      <div class="page-hdr">
+        <div><h1># Send Visitor Invite</h1><p>Compose and send a visit invitation via email</p></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1000px">
+
+        <!-- Invite Form -->
+        <div class="card">
+          <div class="card-toolbar"><span class="card-title">✉️ Invitation Details</span></div>
+          <div style="padding:20px">
+            <div class="alert alert-success" id="invite-success"></div>
+            <div class="alert alert-danger"  id="invite-error"></div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label">Guest Full Name *</label>
+                <input type="text" id="inv-name" class="field-input" placeholder="John Doe"/>
+              </div>
+              <div class="field">
+                <label class="field-label">Guest Email *</label>
+                <input type="email" id="inv-email" class="field-input" placeholder="guest@example.com" inputmode="email"/>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label">Guest Phone</label>
+                <input type="tel" id="inv-phone" class="field-input" placeholder="+254 7XX XXX XXX"/>
+              </div>
+              <div class="field">
+                <label class="field-label">National ID / Passport</label>
+                <input type="text" id="inv-id" class="field-input" placeholder="ID number"/>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label">Purpose of Visit *</label>
+                <select id="inv-purpose" class="field-input">
+                  <option value="">Select purpose…</option>
+                  <option value="Meeting">Meeting</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Personal Visit">Personal Visit</option>
+                  <option value="Official Business">Official Business</option>
+                  <option value="Training">Training</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Entry Gate</label>
+                <select id="inv-gate" class="field-input">
+                  <option value="Main Gate">Main Gate</option>
+                  <option value="Gate B">Gate B</option>
+                  <option value="Gate C">Gate C</option>
+                  <option value="Staff Entrance">Staff Entrance</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <!-- CUSTOM DATE PICKER -->
+              <div class="field">
+                <label class="field-label">Scheduled Date *</label>
+                <div class="custom-picker-wrap" id="date-picker-wrap">
+                  <div class="custom-picker-display" id="date-display" onclick="toggleDatePicker()">
+                    <span class="picker-icon">📅</span>
+                    <span id="date-display-text">Select date…</span>
+                    <span class="picker-chevron">▾</span>
+                  </div>
+                  <div class="custom-picker-dropdown" id="date-dropdown" style="display:none">
+                    <div class="cal-nav">
+                      <button type="button" onclick="calNav(-1)">◀</button>
+                      <span id="cal-month-label"></span>
+                      <button type="button" onclick="calNav(1)">▶</button>
+                    </div>
+                    <div class="cal-weekdays">
+                      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div class="cal-days" id="cal-days"></div>
+                  </div>
+                </div>
+                <!-- Hidden input so sendInvite() still reads it -->
+                <input type="hidden" id="inv-date"/>
+              </div>
+
+              <!-- CUSTOM TIME PICKER -->
+              <div class="field">
+                <label class="field-label">Expected Time of Arrival</label>
+                <div class="custom-picker-wrap" id="time-picker-wrap">
+                  <div class="custom-picker-display" id="time-display" onclick="toggleTimePicker()">
+                    <span class="picker-icon">🕐</span>
+                    <span id="time-display-text">Select time…</span>
+                    <span class="picker-chevron">▾</span>
+                  </div>
+                  <div class="custom-picker-dropdown" id="time-dropdown" style="display:none">
+                    <div class="time-cols">
+                      <div class="time-col" id="time-hours"></div>
+                      <div class="time-sep">:</div>
+                      <div class="time-col" id="time-minutes"></div>
+                      <div class="time-col" id="time-ampm"></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Hidden input so sendInvite() still reads it -->
+                <input type="hidden" id="inv-time"/>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Additional Notes</label>
+              <textarea id="inv-notes" class="field-input" rows="3" placeholder="Any additional instructions for your guest…" style="resize:vertical"></textarea>
+            </div>
+
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-teal" id="btn-send-invite" onclick="sendInvite()" style="flex:1;padding:12px;font-size:15px">Send Invitation</button>
+              <button class="btn btn-outline" onclick="clearInviteForm()">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Preview -->
+        <div>
+          <div class="card">
+            <div class="card-toolbar"><span class="card-title"> Email Preview</span></div>
+            <div style="padding:20px">
+              <!-- Simulated email template -->
+              <div style="background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e0e8f5">
+                <!-- Email header -->
+                <div style="background:linear-gradient(135deg,#0a1a32,#0d2a4a);padding:24px;text-align:center">
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.08em;color:#f5a623">SUKUMA LANGO</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.1em;margin-top:4px;font-family:monospace">VISITOR INVITATION</div>
+                </div>
+                <!-- Email body -->
+                <div style="padding:24px;font-family:'Inter',sans-serif;color:#1a2a44">
+                  <p style="font-size:14px;margin-bottom:12px">Dear <strong id="prev-name" style="color:#0a1a32">Guest</strong>,</p>
+                  <p style="font-size:13px;color:#4a6a8a;line-height:1.6;margin-bottom:16px">
+                    You have been invited to visit <strong id="prev-host" style="color:#0a1a32">the host</strong>. Please present this invitation at the gate upon arrival.
+                  </p>
+                  <!-- Visit details box -->
+                  <div style="background:#f0f5ff;border-radius:8px;padding:16px;margin-bottom:16px">
+                    <div style="font-size:11px;font-weight:700;color:#3d5878;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;font-family:monospace">Visit Details</div>
+                    <table style="width:100%;font-size:13px;border-collapse:collapse">
+                      <tr><td style="color:#6b7e9a;padding:4px 0;width:40%">Purpose</td><td style="font-weight:600;color:#1a2a44" id="prev-purpose">—</td></tr>
+                      <tr><td style="color:#6b7e9a;padding:4px 0">Date</td><td style="font-weight:600;color:#1a2a44" id="prev-date">—</td></tr>
+                      <tr><td style="color:#6b7e9a;padding:4px 0">Time</td><td style="font-weight:600;color:#1a2a44" id="prev-time">—</td></tr>
+                      <tr><td style="color:#6b7e9a;padding:4px 0">Gate</td><td style="font-weight:600;color:#1a2a44" id="prev-gate">—</td></tr>
+                    </table>
+                  </div>
+                  <div style="background:#fff7e6;border:1px solid #f5a62340;border-radius:8px;padding:12px;font-size:12px;color:#6b4c00;margin-bottom:16px">
+                    <strong>⚠️ Important:</strong> Please bring a valid photo ID (National ID or Passport) for verification at the gate.
+                  </div>
+                  <div id="prev-notes" style="font-size:12px;color:#6b7e9a;font-style:italic;margin-bottom:16px;display:none"></div>
+                  <div style="text-align:center;padding:16px 0;border-top:1px solid #e0e8f5">
+                    <div style="font-size:11px;color:#9baec4;font-family:monospace">Powered by Sukuma Lango · KCA University</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MY VISITORS (Active) -->
+    <div class="page" id="page-myvisits">
+      <div class="page-hdr">
+        <div><h1># My Visitors</h1><p>Visitors currently on premises to see you</p></div>
+        <button class="btn btn-outline" onclick="loadMyVisitors()">🔄 Refresh</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Visitor ID</th><th>Name (from invite)</th><th>Purpose</th><th>Gate</th><th>Arrival Time</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody id="my-visitors-body">
+            <tr><td colspan="7" class="state-cell"><span class="spinner"></span>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SCHEDULED VISITS -->
+    <div class="page" id="page-scheduled">
+      <div class="page-hdr">
+        <div><h1># Scheduled Visits</h1><p>Upcoming and past visit invitations you have sent</p></div>
+        <button class="btn btn-teal" onclick="showPage('page-invite')">✉️ Send New Invite</button>
+      </div>
+      <div class="card">
+        <div class="card-toolbar">
+          <span class="card-title">All Invitations</span>
+          <input type="date" id="sched-filter-date" class="field-input" style="width:160px;padding:6px 10px;font-size:12px" onchange="renderScheduled()"/>
+          <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="document.getElementById('sched-filter-date').value='';renderScheduled()">Clear</button>
+        </div>
+        <table>
+          <thead><tr><th>Guest Name</th><th>Email</th><th>Purpose</th><th>Scheduled Date</th><th>Time</th><th>Gate</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="scheduled-body">
+            <tr><td colspan="8" class="state-cell">No scheduled visits yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- #main -->
+</div><!-- #layout -->
+
+<script>
+const API='/api/v1';
+let token=null,currentUser=null;
+let invites=JSON.parse(localStorage.getItem('sl_host_invites')||'[]');
+
+// ── Auth ──
+async function doLogin(){
+  const u=document.getElementById('h-username').value.trim();
+  const p=document.getElementById('h-password').value;
+  const e=document.getElementById('login-err');
+  e.style.display='none';
+  if(!u||!p){e.textContent='Please enter your credentials.';e.style.display='block';return;}
+  try{
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const data=await r.json();
+    if(!r.ok){e.textContent=data.error?.message||'Login failed.';e.style.display='block';return;}
+    token=data.data.accessToken;currentUser=data.data.user;
+    sessionStorage.setItem('sl_h_token',token);
+    sessionStorage.setItem('sl_h_user',JSON.stringify(currentUser));
+    document.getElementById('h-password').value='';
+    bootPortal();
+  }catch(_){e.textContent='Network error. Is the server running?';e.style.display='block';}
+}
+
+function doLogout(){
+  token=null;currentUser=null;
+  sessionStorage.removeItem('sl_h_token');sessionStorage.removeItem('sl_h_user');
+  document.getElementById('topbar').style.display='none';
+  document.getElementById('layout').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+function bootPortal(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('layout').style.display='flex';
+  document.getElementById('tb-uname').textContent=currentUser.username;
+  document.getElementById('tb-avatar').textContent=currentUser.username[0].toUpperCase();
+  initPickers();
+  loadDashboard();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('h-password')?.addEventListener('keyup',e=>{if(e.key==='Enter')doLogin();});
+  const t=sessionStorage.getItem('sl_h_token');
+  const u=sessionStorage.getItem('sl_h_user');
+  if(t&&u){token=t;currentUser=JSON.parse(u);bootPortal();}
+  // Live preview update
+  ['inv-name','inv-purpose','inv-date','inv-time','inv-gate','inv-notes'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('input',updatePreview);
+    document.getElementById(id)?.addEventListener('change',updatePreview);
+  });
+});
+
+// ── Navigation ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-link').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  const nav=id.replace('page-','nav-');
+  document.getElementById(nav)?.classList.add('active');
+  if(id==='page-dashboard')loadDashboard();
+  if(id==='page-myvisits')loadMyVisitors();
+  if(id==='page-scheduled')renderScheduled();
+}
+
+// ── Dashboard ──
+function loadDashboard(){
+  const total=invites.length;
+  const today=new Date().toISOString().slice(0,10);
+  const todayInvites=invites.filter(i=>i.date===today);
+  const pending=invites.filter(i=>i.status==='pending'&&i.date>=today).length;
+  document.getElementById('kpi-sent').textContent=total;
+  document.getElementById('kpi-arrived').textContent=todayInvites.filter(i=>i.status==='arrived').length;
+  document.getElementById('kpi-pending').textContent=pending;
+  renderRecentInvites();
+}
+
+function renderRecentInvites(){
+  const tbody=document.getElementById('recent-invites-body');
+  const recent=invites.slice(-10).reverse();
+  if(!recent.length){tbody.innerHTML=`<tr><td colspan="6" class="state-cell">No invitations yet. Send your first invite!</td></tr>`;return;}
+  tbody.innerHTML=recent.map(inv=>`
+    <tr>
+      <td><strong>${esc(inv.name)}</strong></td>
+      <td class="mono">${esc(inv.email)}</td>
+      <td>${esc(inv.purpose)}</td>
+      <td class="mono">${fmtDate(inv.date)} ${inv.time?inv.time:''}</td>
+      <td>${statusPill(inv.status,inv.date)}</td>
+      <td><button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="cancelInvite('${inv.id}')">Cancel</button></td>
+    </tr>`).join('');
+}
+
+// ── Send Invite ──
+function updatePreview(){
+  const name=document.getElementById('inv-name').value||'Guest';
+  const purpose=document.getElementById('inv-purpose').value||'—';
+  const date=document.getElementById('inv-date').value;
+  const time=document.getElementById('inv-time').value;
+  const gate=document.getElementById('inv-gate').value;
+  const notes=document.getElementById('inv-notes').value;
+  document.getElementById('prev-name').textContent=name;
+  document.getElementById('prev-host').textContent=currentUser?.username||'the host';
+  document.getElementById('prev-purpose').textContent=purpose;
+  document.getElementById('prev-date').textContent=date?new Date(date).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'—';
+  document.getElementById('prev-time').textContent=time||'Not specified';
+  document.getElementById('prev-gate').textContent=gate;
+  const notesEl=document.getElementById('prev-notes');
+  if(notes){notesEl.textContent='"'+notes+'"';notesEl.style.display='block';}
+  else{notesEl.style.display='none';}
+}
+
+async function sendInvite(){
+  const name   =document.getElementById('inv-name').value.trim();
+  const email  =document.getElementById('inv-email').value.trim();
+  const phone  =document.getElementById('inv-phone').value.trim();
+  const idNum  =document.getElementById('inv-id').value.trim();
+  const purpose=document.getElementById('inv-purpose').value;
+  const gate   =document.getElementById('inv-gate').value;
+  const date   =document.getElementById('inv-date').value;
+  const time   =document.getElementById('inv-time').value;
+  const notes  =document.getElementById('inv-notes').value.trim();
+
+  const errEl=document.getElementById('invite-error');
+  const sucEl=document.getElementById('invite-success');
+  errEl.classList.remove('show');sucEl.classList.remove('show');
+
+  if(!name||!email||!purpose||!date){
+    errEl.textContent='Please fill in Guest Name, Email, Purpose and Date.';
+    errEl.classList.add('show');return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    errEl.textContent='Please enter a valid email address.';
+    errEl.classList.add('show');return;
+  }
+
+  const btn=document.getElementById('btn-send-invite');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Sending…';
+
+  // Simulate email send (in production this would call a backend email endpoint)
+  await new Promise(r=>setTimeout(r,1500));
+
+  // Save invite locally
+  const invite={
+    id:'inv_'+Date.now(),
+    name,email,phone,idNum,purpose,gate,date,time,notes,
+    host:currentUser.username,
+    sentAt:new Date().toISOString(),
+    status:'pending',
+  };
+  invites.push(invite);
+  localStorage.setItem('sl_host_invites',JSON.stringify(invites));
+
+  btn.disabled=false;btn.innerHTML='📧 Send Invitation';
+  sucEl.textContent=`✅ Invitation sent to ${name} (${email}) for ${fmtDate(date)}!`;
+  sucEl.classList.add('show');
+
+  // Show simulated email confirmation
+  setTimeout(()=>{
+    alert(`📧 Email Simulation\n\nIn a production system with SMTP configured, this invite would be emailed to:\n\nTo: ${email}\nSubject: You're invited to visit ${currentUser.username} at Sukuma Lango\n\nFor this closed LAN demo, the invite is saved locally.\nView it under "Scheduled Visits".`);
+  },500);
+
+  loadDashboard();
+  setTimeout(()=>sucEl.classList.remove('show'),5000);
+}
+
+function clearInviteForm(){
+  ['inv-name','inv-email','inv-phone','inv-id','inv-notes'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('inv-purpose').value='';
+  document.getElementById('inv-gate').value='Main Gate';
+  initPickers();  // resets date and time pickers to smart defaults
+  updatePreview();
+}
+
+function cancelInvite(id){
+  if(!confirm('Cancel this invitation?'))return;
+  const inv=invites.find(i=>i.id===id);
+  if(inv)inv.status='cancelled';
+  localStorage.setItem('sl_host_invites',JSON.stringify(invites));
+  loadDashboard();renderScheduled();
+}
+
+// ── My Visitors ──
+async function loadMyVisitors(){
+  const tbody=document.getElementById('my-visitors-body');
+  tbody.innerHTML=`<tr><td colspan="7" class="state-cell"><span class="spinner"></span>Loading…</td></tr>`;
+  try{
+    const r=await fetch(API+'/visitors/active',{headers:{Authorization:'Bearer '+token}});
+    const data=await r.json();
+    if(!r.ok){tbody.innerHTML=`<tr><td colspan="7" class="state-cell">Could not load visitors.</td></tr>`;return;}
+    const vs=data.data.visitors.filter(v=>
+      (v.hostName||'').toLowerCase().includes(currentUser.username.toLowerCase())
+    );
+    if(!vs.length){tbody.innerHTML=`<tr><td colspan="7" class="state-cell">No visitors currently inside for you.</td></tr>`;return;}
+    tbody.innerHTML=vs.map(v=>{
+      const mins=Math.floor((Date.now()-new Date(v.entryTime))/60000);
+      const dur=mins<60?`${mins}m`:`${Math.floor(mins/60)}h ${mins%60}m`;
+      // Match against sent invites
+      const matchedInvite=invites.find(i=>i.idNum===v.visitorId||i.name.toLowerCase()===v.visitorId.toLowerCase());
+      return`<tr>
+        <td class="mono">${esc(v.visitorId)}</td>
+        <td>${matchedInvite?esc(matchedInvite.name):'—'}</td>
+        <td>${matchedInvite?esc(matchedInvite.purpose):'—'}</td>
+        <td>${esc(v.gateEntry)}</td>
+        <td class="mono">${fmtDT(v.entryTime)}</td>
+        <td class="mono" style="color:var(--teal)">${dur}</td>
+        <td><span class="pill inside"><span class="pill-dot"></span>Inside</span></td>
+      </tr>`;
+    }).join('');
+  }catch(_){tbody.innerHTML=`<tr><td colspan="7" class="state-cell">Network error.</td></tr>`;}
+}
+
+// ── Scheduled ──
+function renderScheduled(){
+  const filterDate=document.getElementById('sched-filter-date').value;
+  const tbody=document.getElementById('scheduled-body');
+  let list=invites.slice().reverse();
+  if(filterDate)list=list.filter(i=>i.date===filterDate);
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="8" class="state-cell">No invitations found.</td></tr>`;return;}
+  tbody.innerHTML=list.map(inv=>`<tr>
+    <td><strong>${esc(inv.name)}</strong></td>
+    <td class="mono">${esc(inv.email)}</td>
+    <td>${esc(inv.purpose)}</td>
+    <td class="mono">${fmtDate(inv.date)}</td>
+    <td class="mono">${inv.time||'—'}</td>
+    <td>${esc(inv.gate)}</td>
+    <td>${statusPill(inv.status,inv.date)}</td>
+    <td>
+      ${inv.status==='pending'?`<button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="cancelInvite('${inv.id}')">Cancel</button>`:'—'}
+    </td>
+  </tr>`).join('');
+}
+
+// ── Helpers ──
+function statusPill(status,date){
+  const today=new Date().toISOString().slice(0,10);
+  if(status==='cancelled')return`<span class="pill expired"><span class="pill-dot"></span>Cancelled</span>`;
+  if(status==='arrived')return`<span class="pill inside"><span class="pill-dot"></span>Arrived</span>`;
+  if(date<today)return`<span class="pill expired"><span class="pill-dot"></span>Expired</span>`;
+  if(date===today)return`<span class="pill pending"><span class="pill-dot"></span>Today</span>`;
+  return`<span class="pill accepted"><span class="pill-dot"></span>Upcoming</span>`;
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(d){if(!d)return'—';return new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDT(dt){return dt?new Date(dt).toLocaleString('en-KE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}):'—';}
+
+// ══════════════════════════════════════════════════════
+//  CUSTOM DATE PICKER
+// ══════════════════════════════════════════════════════
+let calView=new Date();  // month currently shown
+let selDate=null;        // selected Date object
+
+const MONTHS=['January','February','March','April','May','June',
+              'July','August','September','October','November','December'];
+
+function toggleDatePicker(){
+  const dd=document.getElementById('date-dropdown');
+  const disp=document.getElementById('date-display');
+  const isOpen=dd.style.display!=='none';
+  closeAllPickers();
+  if(!isOpen){
+    dd.style.display='block';
+    disp.classList.add('open');
+    renderCalendar();
+  }
+}
+
+function calNav(dir){
+  calView=new Date(calView.getFullYear(), calView.getMonth()+dir, 1);
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const year=calView.getFullYear();
+  const month=calView.getMonth();
+  document.getElementById('cal-month-label').textContent=`${MONTHS[month]} ${year}`;
+
+  const firstDay=new Date(year,month,1).getDay(); // 0=Sun
+  const daysInMonth=new Date(year,month+1,0).getDate();
+
+  let html='';
+  // Empty cells before first day
+  for(let i=0;i<firstDay;i++) html+=`<div class="cal-day empty"></div>`;
+
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(year,month,d);
+    const isPast=date<today;
+    const isToday=date.getTime()===today.getTime();
+    const isSel=selDate&&date.getTime()===selDate.getTime();
+    const cls=['cal-day',isPast?'disabled':'',isToday?'today':'',isSel?'selected':''].filter(Boolean).join(' ');
+    const action=isPast?'':`onclick="selectDate(${year},${month},${d})"`;
+    html+=`<div class="${cls}" ${action}>${d}</div>`;
+  }
+  document.getElementById('cal-days').innerHTML=html;
+}
+
+function selectDate(y,m,d){
+  selDate=new Date(y,m,d);
+  // Format as YYYY-MM-DD for the hidden input
+  const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  document.getElementById('inv-date').value=iso;
+  // Display as human-readable
+  document.getElementById('date-display-text').textContent=
+    selDate.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  closeAllPickers();
+  updatePreview();
+}
+
+// ══════════════════════════════════════════════════════
+//  CUSTOM TIME PICKER
+// ══════════════════════════════════════════════════════
+let selHour=9, selMin=0, selAMPM='AM';
+
+function toggleTimePicker(){
+  const dd=document.getElementById('time-dropdown');
+  const disp=document.getElementById('time-display');
+  const isOpen=dd.style.display!=='none';
+  closeAllPickers();
+  if(!isOpen){
+    dd.style.display='block';
+    disp.classList.add('open');
+    renderTimePicker();
+  }
+}
+
+function renderTimePicker(){
+  // Hours 1–12
+  let hHtml='';
+  for(let h=1;h<=12;h++){
+    hHtml+=`<div class="time-opt${selHour===h?' selected':''}" onclick="selTimeHour(${h})">${String(h).padStart(2,'0')}</div>`;
+  }
+  document.getElementById('time-hours').innerHTML=hHtml;
+
+  // Minutes 00, 15, 30, 45
+  let mHtml='';
+  [0,15,30,45].forEach(m=>{
+    mHtml+=`<div class="time-opt${selMin===m?' selected':''}" onclick="selTimeMin(${m})">${String(m).padStart(2,'0')}</div>`;
+  });
+  document.getElementById('time-minutes').innerHTML=mHtml;
+
+  // AM / PM
+  document.getElementById('time-ampm').innerHTML=
+    `<div class="time-opt${selAMPM==='AM'?' selected':''}" onclick="selTimeAMPM('AM')">AM</div>`+
+    `<div class="time-opt${selAMPM==='PM'?' selected':''}" onclick="selTimeAMPM('PM')">PM</div>`;
+
+  // Scroll selected hour into view
+  setTimeout(()=>{
+    const hEl=document.querySelector('#time-hours .selected');
+    if(hEl) hEl.scrollIntoView({block:'nearest'});
+  },50);
+}
+
+function selTimeHour(h){ selHour=h; applyTime(); }
+function selTimeMin(m){  selMin=m;  applyTime(); }
+function selTimeAMPM(ap){selAMPM=ap; applyTime(); }
+
+function applyTime(){
+  // Convert to 24h for hidden input
+  let h24=selHour;
+  if(selAMPM==='AM'&&selHour===12) h24=0;
+  if(selAMPM==='PM'&&selHour!==12) h24=selHour+12;
+  const timeStr=`${String(h24).padStart(2,'0')}:${String(selMin).padStart(2,'0')}`;
+  document.getElementById('inv-time').value=timeStr;
+  document.getElementById('time-display-text').textContent=
+    `${String(selHour).padStart(2,'0')}:${String(selMin).padStart(2,'0')} ${selAMPM}`;
+  renderTimePicker();
+  updatePreview();
+}
+
+// ── Close all pickers when clicking outside ──
+function closeAllPickers(){
+  document.getElementById('date-dropdown').style.display='none';
+  document.getElementById('date-display').classList.remove('open');
+  document.getElementById('time-dropdown').style.display='none';
+  document.getElementById('time-display').classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  if(!document.getElementById('date-picker-wrap')?.contains(e.target)&&
+     !document.getElementById('time-picker-wrap')?.contains(e.target)){
+    closeAllPickers();
+  }
+});
+
+// ── Init pickers with smart defaults ──
+function initPickers(){
+  // Default date = today
+  const today=new Date(); today.setHours(0,0,0,0);
+  selDate=today;
+  calView=new Date(today.getFullYear(),today.getMonth(),1);
+  const iso=today.toISOString().slice(0,10);
+  document.getElementById('inv-date').value=iso;
+  document.getElementById('date-display-text').textContent=
+    today.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+  // Default time = next hour rounded
+  const now=new Date();
+  const nextHour=now.getHours()+1;
+  selAMPM=nextHour>=12?'PM':'AM';
+  selHour=nextHour%12||12;
+  selMin=0;
+  applyTime();
+}
+</script>
+</body>
+</html>
